@@ -19,8 +19,7 @@ sudo chmod ugo+rwx /home/ -R
 # var 
 # # # # # # # # # #
 
-usr="whoami"
-logfile=/home/$usr/rpiAUTOlog.txt
+logfile=~/rpiAUTOlog.txt
 bin=/usr/bin
 OS=0
 ID=0
@@ -29,7 +28,14 @@ up="sudo apt update"
 fug="sudo apt full-upgrade -y"
 ar="sudo apt autoremove -y"
 inst="sudo apt install -y"
-
+in1=0
+in2=0
+in3=0
+in4=0
+## in1 = 1 (kali) 2 (ubuntu) 3 (Raspian) 4 (OpenAuto) 5 (OpenWRT)
+## in2 = 1 (32bit desk) 2 (32bit headless) 3 (32bit server) 4 (64bit desk) 5 (64bit headless) 6 (64bit Server)
+## in3 = 1 (AWUS1900) 2 (AWUS036AC) 3 (BROSTREND) 4 (NinePlus) 5 (none)
+## in4 = 1 (Wardriving) 2 (WifiCracking) 3 (Network Traffic Sniff) 4 (IOT) 5 (Router) 6 (HeadUnit)
 
 # # # # # # # # # # 
 # colors
@@ -59,6 +65,34 @@ menuHEADER(){
         ";
 }
 
+kis(){
+    echo -ne "
+        $grn =-><-= Installing Kismet Packages =-><-= $noc";
+        sudo mkdir -p ~/kismet;
+        cd ~/kismet || return;
+        if [[ $ID == 1 ]];
+            then
+                wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | sudo apt-key add -;
+                echo 'deb https://www.kismetwireless.net/repos/apt/git/kali kali main' | sudo tee /etc/apt/sources.list.d/kismet.list;
+                up;
+                $inst kismet;
+            if [[ $ID == 2 ]];
+                then
+                    wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | sudo apt-key add -;
+                    echo 'deb https://www.kismetwireless.net/repos/apt/git/bullseye bullseye main' | sudo tee /etc/apt/sources.list.d/kismet.list;
+                    up;
+                    $inst kismet;
+                if [[ $ID == 3 ]];
+                    then
+                        wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | sudo apt-key add -;
+                        echo 'deb https://www.kismetwireless.net/repos/apt/release/jammy jammy main' | sudo tee /etc/apt/sources.list.d/kismet.list;
+                        up;
+                        $inst kismet;
+                fi
+            fi
+        fi
+}
+
 update(){
     echo -e "$grn =-><-==-><-==-><-= Updating =-><-==-><-==-><-=$noc";
     $up;
@@ -66,6 +100,98 @@ update(){
     $fug;
     echo -e "$grn =-><-==-><-==-><-= Autoremoving =-><-==-><-==-><-=$noc";
     $ar;
+}
+
+pkgSCRIPT(){
+    echo -ne "
+        $blu =-><-==-><-==-><-= $pkg Install =-><-==-><-==-><-= $noc
+        ";
+        sleep 1;
+            if [ -f "$bin/$pkg" ]; 
+                then
+                    echo -ne "
+                        $grn $pkg is already installed $noc";
+                    sleep 2;
+                else
+                    echo -ne "
+                        $red $pkg not found. Installing.... $noc
+                            ";
+                    $inst "$pkg";
+            fi   
+}
+
+pkgINST1(){
+    clear;
+    up;
+    pkg=git;
+    pkgSCRIPT;
+    clear;
+    pkg=net-tools;
+    pkgSCRIPT;
+    clear;
+    pkg=aircrack-ng;
+    pkgSCRIPT;
+    clear;
+    pkg=wifite;
+    pkgSCRIPT;
+    clear;
+    pkg=hcxtools;
+    pkgSCRIPT;
+    clear;
+    pkg=hcxdumptool;
+    pkgSCRIPT;
+    clear;
+    pkg=bully;
+    pkgSCRIPT;
+    clear;
+    pkg=macchanger;
+    pkgSCRIPT;
+    clear;
+    pkg=dkms;
+    pkgSCRIPT;
+    clear;
+    pkg='bc';
+    pkgSCRIPT;
+    clear;
+    pkg=build-essentials;
+    pkgSCRIPT;
+    clear;
+    pkg=libelf-dev;
+    pkgSCRIPT;
+    clear;
+    pkg=mokutil;
+    pkgSCRIPT;
+    clear;
+    pkg=wireshark;
+    pkgSCRIPT;
+    clear;
+    pkg=gpsd;
+    pkgSCRIPT;
+    clear;
+    pkg=gpsd-clients;
+    pkgSCRIPT;
+    clear;
+    pkg=rtl-sdr;
+    pkgSCRIPT;
+    clear;
+    pkg=gqrx-sdr;
+    pkgSCRIPT;
+    clear;
+    if [[ $ID == 1 ]];
+        then
+            pkg=kalipi-kernel-headers;
+            pkgSCRIPT;
+        if [[ $ID == 2 ]];
+            then
+                pkg=linux-headers-raspi;
+                pkgSCRIPT;
+            if [[ $ID == 3 ]];
+                then
+                    pkg=raspberrypi-kernel-headers;
+                    pkgSCRIPT;
+            fi
+        fi
+    fi
 }
 
 install1(){
@@ -229,6 +355,13 @@ install1(){
 # # # # # # # # # #
 
 menuMAIN1(){
+    if [ -f /usr/bin/timeshift ];
+        then 
+            sudo timeshift --create --comments "Fresh";
+        else
+            $inst timeshift;
+            sudo timeshift --create --comments "Fresh";
+    fi
     menuHEADER;
         echo -ne "
             $red $noc
@@ -239,10 +372,10 @@ menuMAIN1(){
             $red 3 - Raspian $noc 
             $red 4 - OpenAuto PRO $noc 
             $red 5 - OpenWRT $noc 
-            $red $noc";
-            read -p "$ylw Input choice : $noc" -rs dist; 
+            $ylw "; 
+            read -p " Input choice : " -r dist; 
         echo -ne "
-            $red $noc";
+            $noc";
                 while true; do
                     case $dist in
                         1) echo -e "$grn KaliPi $noc";
@@ -267,6 +400,134 @@ menuMAIN1(){
                 done
 }
 
+menuDIST(){
+    menuHEADER;
+    if [[ $dist == 1 ]]
+        then 
+            echo -ne "
+            $red $noc
+            $red KaliPi Version $noc
+            $red $noc
+            $red 1 - 32bit Desktop $noc
+            $red 2 - 32bit Headless $noc 
+            $red 3 - 64bit Desktop $noc 
+            $red 4 - 64bit Headless $noc 
+            $ylw";
+            read -p " Input choice : " -r vers; 
+        echo -ne "
+            $red $noc";
+                while true; do
+                    case $vers in
+                        1) echo -e "$grn Kali Pi 32bit Desktop $noc";
+                            sleep 3; 
+                                OS=101; OSN='Kali Pi 32bit Desktop';
+                                menuMAIN2;;
+                        2) echo -e "$grn Kali Pi 32bit Headless $noc";
+                            sleep 3;
+                                OS=102; OSN='Kali Pi 32bit Headless';
+                                menuMAIN2;;
+                        3) echo -e "$grn Kali Pi 64bit Desktop $noc";
+                            sleep 3;
+                                OS=103; OSN='Kali Pi 32bit Headless';
+                                menuMAIN2;;
+                        4) echo -e "$grn Kali Pi 64bit Headless $noc";
+                            sleep 3;
+                                OS=104; OSN='Kali Pi 32bit Headless';
+                                menuMAIN2;;
+                        *) ehco -e "$blu Choose Again $noc";
+                            sleep 3;
+                                menuDIST;;
+                    esac
+                done
+    fi
+    if [[ $dist == 2 ]]
+        then 
+            echo -ne "
+            $red $noc
+            $red Ubuntu Version $noc
+            $red $noc
+            $red 1 - 32bit Desktop $noc
+            $red 2 - 32bit Headless $noc 
+            $red 3 - 32bit Server $noc
+            $red 4 - 64bit Desktop $noc 
+            $red 5 - 64bit Headless $noc 
+            $red 6 - 64bit Server $noc
+            $ylw";
+            read -p " Input choice : " -r vers; 
+        echo -ne "
+            $red $noc";
+                while true; do
+                    case $vers in
+                        1var ) echo -e "$grn Ubuntu 32bit Desktop $noc";
+                            sleep 3; 
+                                OS=201; OSN='Ubuntu 32bit Desktop';
+                                menuMAIN2;;
+                        2) echo -e "$grn Ubuntu 32bit Headless $noc";
+                            sleep 3;
+                                OS=202; OSN='Ubuntu 32bit Headless';
+                                menuMAIN2;;
+                        3) echo -e "$grn Ubuntu 32bit Server $noc";
+                            sleep 3;
+                                OS=203; OSN='Ubuntu 32bit Server';
+                                menuMAIN2;;
+                        4) echo -e "$grn Ubuntu 64bit Desktop $noc";
+                            sleep 3;
+                                OS=204; OSN='Ubuntu 64bit Desktop';
+                                menuMAIN2;;
+                        5) echo -e "$grn Ubuntu 64bit Headless $noc";
+                            sleep 3;
+                                OS=205; OSN='Ubuntu 64bit Headless';
+                                menuMAIN2;;
+                        6) echo -e "$grn Ubuntu 64bit Server $noc";
+                            sleep 3;
+                                OS=206; OSN='Ubuntu 64bit Server';
+                                menuMAIN2;;
+                        *) ehco -e "$blu Choose Again $noc";
+                            sleep 3;
+                                menuDIST;;
+                    esac
+                done
+    fi
+    if [[ $dist == 3 ]]
+        then 
+            echo -ne "
+            $red $noc
+            $red Raspian Version $noc
+            $red $noc
+            $red 1 - 32bit Desktop $noc
+            $red 2 - 32bit Headless $noc
+            $red 3 - 64bit Desktop $noc 
+            $red 4 - 64bit Headless $noc
+            $ylw";
+            read -p " Input choice : " -r vers; 
+        echo -ne "
+            $red $noc";
+                while true; do
+                    case $vers in
+                        1) echo -e "$grn Raspian 32bit Desktop $noc";
+                            sleep 3; 
+                                OS=301; OSN='Raspian 32bit Desktop';
+                                menuMAIN2;;
+                        2) echo -e "$grn Raspian 32bit Headless $noc";
+                            sleep 3;
+                                OS=302; OSN='Raspian 32bit Headless';
+                                menuMAIN2;;
+                        3) echo -e "$grn Raspian 64bit Desktop $noc";
+                            sleep 3;
+                                OS=303; OSN='Raspian 64bit Desktop';
+                                menuMAIN2;;
+                        4) echo -e "$grn Raspian 64bit Headless $noc";
+                            sleep 3;
+                                OS=304; OSN='Raspian 64bit Headless';
+                                menuMAIN2;;
+                        *) ehco -e "$blu Choose Again $noc";
+                            sleep 3;
+                                menuDIST;;
+                    esac
+                done
+    fi
+}
+
 menuMAIN2(){
     menuHEADER;
         echo -ne "
@@ -277,11 +538,9 @@ menuMAIN2(){
             $red 2 - ALPHA AWUS036AC $noc 
             $red 3 - Brostrend AC1L / AC3L $noc 
             $red 4 - NinePlus $noc 
-            $red 5 - NONE / On Board Chip $noc 
-            $red $noc";
-            read -p "$ylw Input choice : " -rs wifi; 
-        echo -ne "
-            $red $noc";
+            $red 5 - NONE / On Board Chip $ylw
+            ";
+            read -p " Input choice : " -r wifi;
                 while true; do
                     case $wifi in
                         1) echo -e "$grn Alpha AWUS1900 / Realtek RTL8814AU $noc";
@@ -318,8 +577,8 @@ menuMAIN3(){
             $red 4 - IOT $noc 
             $red 5 - Router $noc 
             $red 6 - HeadUnit $noc
-            $red $noc";
-            read -p "$ylw Input choice : " -rs purp; 
+            $ylw";
+            read -p " Input choice : " -r purp; 
         echo -ne "
             $red $noc";
                 while true; do
@@ -349,145 +608,30 @@ menuMAIN3(){
                 done
 }
 
-menuDIST(){
-    menuHEADER;
-    if [[ $dist == 1 ]]
-        then 
-            echo -ne "
-            $red $noc
-            $red KaliPi Version $noc
-            $red $noc
-            $red 1 - 32bit Desktop $noc
-            $red 2 - 32bit Headless $noc 
-            $red 3 - 64bit Desktop $noc 
-            $red 4 - 64bit Headless $noc 
-            $red $noc";
-            read -p "$ylw Input choice : " -rs vers; 
-        echo -ne "
-            $red $noc";
-                while true; do
-                    case $vers in
-                        1) echo -e "$grn Kali Pi 32bit Desktop $noc";
-                            sleep 3; 
-                                OS=101; OSN='Kali Pi 32bit Desktop';
-                                menuCONF;;
-                        2) echo -e "$grn Kali Pi 32bit Headless $noc";
-                            sleep 3;
-                                OS=102; OSN='Kali Pi 32bit Headless';
-                                menuCONF;;
-                        3) echo -e "$grn Kali Pi 64bit Desktop $noc";
-                            sleep 3;
-                                OS=103; OSN='Kali Pi 32bit Headless';
-                                menuCONF;;
-                        4) echo -e "$grn Kali Pi 64bit Headless $noc";
-                            sleep 3;
-                                OS=104; OSN='Kali Pi 32bit Headless';
-                                menuCONF;;
-                        *) ehco -e "$blu Choose Again $noc";
-                            sleep 3;
-                                menuDIST;;
-                    esac
-                done
+rebCONT(){
+    if [ -f ~/inst102.txt ]
+        then
+            inst102;
+                if [ -f ~/inst103.txt ]
+                    then
+                        inst103;
+                fi
     fi
-    if [[ $dist == 2 ]]
-        then 
-            echo -ne "
-            $red $noc
-            $red Ubuntu Version $noc
-            $red $noc
-            $red 1 - 32bit Desktop $noc
-            $red 2 - 32bit Headless $noc 
-            $red 3 - 32bit Server $noc
-            $red 4 - 64bit Desktop $noc 
-            $red 5 - 64bit Headless $noc 
-            $red 6 - 64bit Server $noc
-            $red $noc";
-            read -p "$ylw Input choice : " -rs vers; 
-        echo -ne "
-            $red $noc";
-                while true; do
-                    case $vers in
-                        1var ) echo -e "$grn Ubuntu 32bit Desktop $noc";
-                            sleep 3; 
-                                OS=201; OSN='Ubuntu 32bit Desktop';
-                                menuCONF;;
-                        2) echo -e "$grn Ubuntu 32bit Headless $noc";
-                            sleep 3;
-                                OS=202; OSN='Ubuntu 32bit Headless';
-                                menuCONF;;
-                        3) echo -e "$grn Ubuntu 32bit Server $noc";
-                            sleep 3;
-                                OS=203; OSN='Ubuntu 32bit Server';
-                                menuCONF;;
-                        4) echo -e "$grn Ubuntu 64bit Desktop $noc";
-                            sleep 3;
-                                OS=204; OSN='Ubuntu 64bit Desktop';
-                                menuCONF;;
-                        5) echo -e "$grn Ubuntu 64bit Headless $noc";
-                            sleep 3;
-                                OS=205; OSN='Ubuntu 64bit Headless';
-                                menuCONF;;
-                        6) echo -e "$grn Ubuntu 64bit Server $noc";
-                            sleep 3;
-                                OS=206; OSN='Ubuntu 64bit Server';
-                                menuCONF;;
-                        *) ehco -e "$blu Choose Again $noc";
-                            sleep 3;
-                                menuDIST;;
-                    esac
-                done
-    fi
-    if [[ $dist == 3 ]]
-        then 
-            echo -ne "
-            $red $noc
-            $red Raspian Version $noc
-            $red $noc
-            $red 1 - 32bit Desktop $noc
-            $red 2 - 32bit Headless $noc
-            $red 3 - 64bit Desktop $noc 
-            $red 4 - 64bit Headless $noc
-            $red $noc";
-            read -p "$ylw Input choice : " -rs vers; 
-        echo -ne "
-            $red $noc";
-                while true; do
-                    case $vers in
-                        1) echo -e "$grn Raspian 32bit Desktop $noc";
-                            sleep 3; 
-                                OS=301; OSN='Raspian 32bit Desktop';
-                                menuCONF;;
-                        2) echo -e "$grn Raspian 32bit Headless $noc";
-                            sleep 3;
-                                OS=302; OSN='Raspian 32bit Headless';
-                                menuCONF;;
-                        3) echo -e "$grn Raspian 64bit Desktop $noc";
-                            sleep 3;
-                                OS=303; OSN='Raspian 64bit Desktop';
-                                menuCONF;;
-                        4) echo -e "$grn Raspian 64bit Headless $noc";
-                            sleep 3;
-                                OS=304; OSN='Raspian 64bit Headless';
-                                menuCONF;;
-                        *) ehco -e "$blu Choose Again $noc";
-                            sleep 3;
-                                menuDIST;;
-                    esac
-                done
-    fi
+    menuMAIN1;
 }
 
 menuCONF(){
     menuHEADER;
         echo -ne "
-            $red Is the fol
-                gpsd -V;lowing correct : $noc
-            $grn $OSN with $WFN for $PURN
+            $red Is the following correct : $noc
+            $grn $OSN$red with$grn $WFN$red for$grn $PURN 
             ";
-        read -rps "$red Do you want to continue ?  Y or N $noc" ans1;
+        read -rp " Do you want to continue ?  Y or N " ans1;
             while true; do
                 case $ans1 in
-                    y | Y ) instSTART;;
+                    y | Y ) sudo touch ~/inst101.txt;
+                                echo -e "$in1 $in2 $in3 $in4" || sudo tee -a ~/inst101.txt;
+                                inst101;;
                     n | N ) echo -e "$blu Okay, lets restart $noc"; menuMAIN1;;
                     *) echo -e "$ylw DIDNT GET THAT $noc";
                         menuCONF;;
@@ -495,14 +639,29 @@ menuCONF(){
             done
 }
 
-instSTART(){
+inst101(){
     update;
     if [[ $OS -lt 310 ]];
         then
-            install1;
+            pkgINST1;
         else
             install2;
     fi
+    sudo touch ~/inst102;
+    echo -e "inst102" || sudo tee -a ~/inst102;
+    echo -ne "
+        $blu Need to Reboot. Ready y/n $noc";
+        read -r yn2;
+        while true; do
+            case $yn2 in
+                yY) sudo reboot;;
+                nN) menuEXIT;;
+                *) echo -e "not a choice"; menuEXIT;;
+            esac
+        done
+}
+    
+inst102(){
     if [[ $WF == 401 ]];
         then
             echo -ne "
@@ -563,6 +722,22 @@ instSTART(){
                 $grn =-><-==-><-==-><-==-><-=  Install Complete  =-><-==-><-==-><-==-><-= $noc";
                 sleep 4;
     fi
+    sudo rm -f ~/inst102;
+    sudo touch ~/inst103;
+    echo -e "inst103" || sudo tee -a ~/inst103;
+        echo -ne "
+        $blu Need to Reboot. Ready y/n $noc";
+        read -r yn2;
+        while true; do
+            case $yn2 in
+                yY) sudo reboot;;
+                nN) menuEXIT;;
+                *) echo -e "not a choice"; menuEXIT;;
+            esac
+        done
+}
+
+inst103(){
     if [[ $PUR == 501 ]] || [[ $PUR == 502 ]] || [[ $PUR == 503 ]];
         then 
             echo -ne "
@@ -600,16 +775,47 @@ instSTART(){
             sudo cp /etc/apt/sources.list /etc/apt/sources.list.bk;
             sudo cp /etc/apt/
             git clone https://github.com/hacker3983/pyrit-installer && cd pyrit-installer && sudo bash install.sh;
-
+            kis;
+            cont;
 
     fi
 }
 
-h# # # # # # # # # # 
+cont(){
+    echo -ne "
+        $blu INSTALL FINISHED. DO YOU WANT TO CONTINUE y OR EXIT n $noc";
+        read -r yn1;
+        while true; do
+            case $yn1 in
+                yY) menuEXIT;;
+                nN) exit;;
+                *) echo -e "thats not a choice"; cont;;
+            esac
+        done                
+}
+
+menuEXIT(){
+    menuHEADER;
+    echo -ne "
+        $grn    What do you want to do? 
+                1. Continue to main menu
+                2. Re-run install 
+                3. Exit $noc"
+                read -p "What number" -r ans3;
+                while true; do
+                    case $ans3 in
+                        1) menuMAIN1;;
+                        2) pkgINST1;;
+                        3) exit;;
+                        *) echo -e "not a choice"; menuEXIT;;
+                    esac
+                done
+}
+
+ # # # # # # # # # 
 # program run
 # # # # # # # # # #
 
-menuMAIN1
-
+rebCONT
 exec 1>"$logfile"
 exec 2>&1
