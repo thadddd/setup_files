@@ -80,13 +80,7 @@ instDIST(){
                     $inst raspberrypi-kernal-headers;
             fi
         fi
-    fi
-    if [[ $ID == 9 ]]
-        then
-            pkgIN9;
-        else
-            pkgIN;
-    fi
+    pkgIN;
     menuWIFI;
 }
 
@@ -209,7 +203,7 @@ kisSET(){
             echo 'deb https://www.kismetwireless.net/repos/apt/git/kali kali main' | sudo tee /etc/apt/sources.list.d/kismet.list;
             $upd;
             $inst kismet;
-        if [[ $ID == 3 ]] || [[ $ID == 4 ]] || [[ $ID == 9 ]]
+        if [[ $ID == 3 ]] || [[ $ID == 4 ]]
             then
                 wget -O - https://www.kismetwireless.net/repos/kismet-release.gpg.key | sudo apt-key add -;
                 echo 'deb https://www.kismetwireless.net/repos/apt/git/jammy jammy main' | sudo tee /etc/apt/sources.list.d/kismet.list;
@@ -245,11 +239,11 @@ gpsdSET(){
     gpsd /dev/ttyACM0;
     cd $home/src || return;
     sudo touch gpsd.conf;
-    echo 'START_DAEMON="true"' | sudo tee -a gpsd.conf;
-    echo 'GPSD_OPTIONS="-n"' | sudo tee -a gpsd.conf;
-    echo 'DEVICES="/dev/ttyACM0"' | sudo tee -a gpsd.conf;
-    echo 'USBAUTO="true"' | sudo tee -a gpsd.conf;
-    echo 'GPSD_SOCKET="/var/run/gpsd.sock"' | sudo tee -a gpsd.conf;
+        echo 'START_DAEMON="true"' | sudo tee -a gpsd.conf;
+        echo 'GPSD_OPTIONS="-n"' | sudo tee -a gpsd.conf;
+        echo 'DEVICES="/dev/ttyACM0"' | sudo tee -a gpsd.conf;
+        echo 'USBAUTO="true"' | sudo tee -a gpsd.conf;
+        echo 'GPSD_SOCKET="/var/run/gpsd.sock"' | sudo tee -a gpsd.conf;
     sudo cp /etc/default/gpsd /etc/default/gpsd.bk;
     sudo cp gpsd.conf /etc/default/gpsd;
     $inst scons libncurses-dev python3-dev pps-tools git-core asciidoctor python3-matplotlib build-essential manpages-dev pkg-config python3-distutils;
@@ -316,7 +310,7 @@ menuMAIN(){
                         OAP;; 
                     8) ID=8; 
                         OWRT;; 
-                    9) ID=9; 
+                    9) ID=4; 
                         instDIST;; 
                     10) exit 0;; 
                     *) menuMAIN;;
@@ -354,45 +348,7 @@ menuWIFI(){
             done
 }
 
-menuMAIN55(){
-    if [ -f /usr/bin/timeshift ];
-        then
-            sudo timeshift --create --comments "setupSTART"
-        else
-            $inst timeshift -y;
-            sudo timeshift --create --comments "setupSTART"
-    fi
-    menuSPACER;
-    menuHEAD;
-    $ech "$red $tspl  $grn    Which distro is installed  $red   $tspr";
-    menuSPACER;
-    $ech "$red $mspl $ylw  1 - $ID1              $red  $mspr";
-    $ech "$red $mspl $ylw  2 - $ID2              $red  $mspr";
-    $ech "$red $mspl $blu  3 - $ID3      $red  $mspr";
-    $ech "$red $mspl $blu  4 - $ID4      $red  $mspr";
-    $ech "$red $mspl $cyn  5 - $ID5  $red  $mspr";
-    $ech "$red $mspl $cyn  6 - $ID6  $red  $mspr";
-    $ech "$red $mspl $gry  7 - $ID7            $red  $mspr";
-    $ech "$red $mspl $gry  8 - $ID8                 $red  $mspr";
-    $ech "$red $mspl $gry  9 - EXIT                    $red  $mspr";
-    menuSPACER;
-    menuSPACER;
-    read -r mans1 -n 1;
-    while true; do 
-        case $mans1 in
-            1) ID=1; instDIST; menuWIFI;;
-            2) ID=2; instDIST; menuWIFI;;
-            3) ID=3; instDIST; menuWIFI;;
-            4) ID=4; instDIST; menuWIFI;;
-            5) ID=5; instDIST; menuWIFI;; 
-            6) ID=6; instDIST; menuWIFI;;
-            7) ID=7; OAP; menuWIFI;;
-            8) ID=8; OWRT; menuWIFI;;
-            9) exit 0;;          
-            *) menuWIFI;;
-        esac
-    done
-}
+
 
 OAP(){
     echo -e "$red NOT SETUP YET $noc";
@@ -403,32 +359,6 @@ OWRT(){
     echo -e "$red NOT SETUP YET $noc";
     sleep 3;
 }
-
-menuWIFI55(){
-    menuHEAD;
-    $ech "$red $tspl   $grn    WiFi Drivers To Install      $red$tspr";
-    menuSPACER;
-    $ech "$red $mspl $ylw  1 - $WD1         $red  $mspr";
-    $ech "$red $mspl $blu  2 - $WD2          $red  $mspr";
-    $ech "$red $mspl $blu  3 - $WD3     $red  $mspr";
-    $ech "$red $mspl $cyn  4 - $WD4                $red  $mspr";
-    $ech "$red $mspl $cyn  5 - Internal Wi-Fi          $red  $mspr";
-    menuSPACER;
-    menuSPACER;
-    read -r wans1 -n 1;
-    while true; do 
-        case $wans1 in
-            1) WD=1; instWIFI;;
-            2) WD=2; instWIFI;;
-            3) WD=3; instWIFI;;
-            4) WD=4; instWIFI;;
-            5) WD=5; menuEND;;
-            6) exit 0;;            
-            *) menuWIFI;;
-        esac
-    done
-}
-
 
 menuEND(){
     #clear;
